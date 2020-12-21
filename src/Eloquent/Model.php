@@ -17,8 +17,12 @@ use Vinelab\NeoEloquent\Eloquent\Relations\OneRelation;
 use Vinelab\NeoEloquent\Helpers;
 use Vinelab\NeoEloquent\Query\Builder as QueryBuilder;
 
+use Illuminate\Support\Facades\Log;
+
 abstract class Model extends IlluminateModel
 {
+    protected $connection = 'neo4j';
+
     /**
      * The node label.
      *
