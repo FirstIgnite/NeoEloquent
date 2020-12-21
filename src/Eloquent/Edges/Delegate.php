@@ -150,6 +150,9 @@ abstract class Delegate
         // so we use it insetead.
         else {
             $node->setProperty($model->getKeyName(), $model->getKey());
+            //! this might be duct tape. a holistic solution would involve a primary key attribute in
+            //! the PropertyContainer class, i believe
+            $node->setId($model->id);
         }
 
         return $node;
