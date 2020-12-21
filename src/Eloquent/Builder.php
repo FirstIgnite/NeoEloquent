@@ -12,6 +12,8 @@ use Illuminate\Support\Arr;
 use Vinelab\NeoEloquent\Helpers;
 use Vinelab\NeoEloquent\QueryException;
 
+use Illuminate\Support\Facades\Log;
+
 class Builder extends IlluminateBuilder
 {
     use Concerns\QueriesRelationships;
@@ -674,6 +676,7 @@ class Builder extends IlluminateBuilder
          *  ]
          */
         $related = [];
+
         foreach ($relations as $relation => $values) {
             $name = $relation;
             // Get the relation by calling the model's relationship function.
@@ -707,7 +710,17 @@ class Builder extends IlluminateBuilder
                 // If this is a Model then the $exists property will indicate what we need
                 // so we'll add its id to be attached.
                 if ($value instanceof Model && $value->exists === true) {
-                    $attach[] = $value->getKey();
+
+                    //! splitting this, it should always get an id but the first block in the
+                    //! if else will function identical to the old librarys expectations, while
+                    //! the else block should allow our primary keys to work. if it breaks in the
+                    //! future, this should help narrow down where to troubleshoot.
+                    if ($value->getKeyName() === 'id') {
+                        $attach[] = $value->getKey();
+                    }
+                    else {
+                        $attach[] = $value->getAttribute('id');
+                    }
                 }
                 // Next we will check whether we got a Collection in so that we deal with it
                 // accordingly, which guarantees sending an Eloquent result straight in would work.
@@ -729,7 +742,6 @@ class Builder extends IlluminateBuilder
             $relation = compact('name', 'type', 'direction');
             $related[] = compact('relation', 'label', 'create', 'attach');
         }
-
         $result = $this->query->createWith($model, $related);
         $models = $this->resultsToModelsWithRelations($this->model->getConnectionName(), $result);
 
