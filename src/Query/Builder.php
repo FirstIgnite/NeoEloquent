@@ -591,17 +591,7 @@ class Builder extends IlluminateQueryBuilder
      */
     public function createWith(array $model, array $related)
     {
-        Log::debug('builder before grammar');
-        Log::debug($model);
-        Log::debug($related);
         $cypher = $this->grammar->compileCreateWith($this, compact('model', 'related'));
-        // Log::debug('model');
-        // Log::debug($model);
-        // Log::debug('related');
-        // Log::debug($related);
-        // Log::debug('compact');
-        // Log::debug(compact('model', 'related'));
-        // throw new \RuntimeException('breaking here');
         // Indicate that we need the result returned as is.
         return $this->connection->statement($cypher, [], true);
     }
