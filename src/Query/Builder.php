@@ -12,6 +12,9 @@ use Illuminate\Database\Query\Processors\Processor as IlluminateProcessor;
 use Vinelab\NeoEloquent\Connection;
 use Vinelab\NeoEloquent\Query\Grammars\Grammar;
 
+use Illuminate\Support\Facades\Log;
+
+
 class Builder extends IlluminateQueryBuilder
 {
     /**
@@ -77,6 +80,7 @@ class Builder extends IlluminateQueryBuilder
         '=~',                                  // Regular Expression
         'starts with', 'ends with', 'contains', // String matching
     ];
+
 
     /**
      * Create a new query builder instance.
@@ -587,8 +591,17 @@ class Builder extends IlluminateQueryBuilder
      */
     public function createWith(array $model, array $related)
     {
+        Log::debug('builder before grammar');
+        Log::debug($model);
+        Log::debug($related);
         $cypher = $this->grammar->compileCreateWith($this, compact('model', 'related'));
-
+        // Log::debug('model');
+        // Log::debug($model);
+        // Log::debug('related');
+        // Log::debug($related);
+        // Log::debug('compact');
+        // Log::debug(compact('model', 'related'));
+        // throw new \RuntimeException('breaking here');
         // Indicate that we need the result returned as is.
         return $this->connection->statement($cypher, [], true);
     }
@@ -784,8 +797,8 @@ class Builder extends IlluminateQueryBuilder
     public function first($columns = ['*'])
     {
         $results = $this->take(1)->get($columns)->current();
-
-        return (isset($results[0]) && count($results[0]) > 0) ? $results[0]->getProperties() : null;
+        // add array() for php >= 7.2
+        return (isset($results[0]) && count(array($results[0])) > 0) ? $results[0]->getProperties() : null;
     }
 
     /**
