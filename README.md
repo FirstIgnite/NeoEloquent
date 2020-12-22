@@ -2,7 +2,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4b18de9ea45b4b2c96a8f78a25db6480)](https://www.codacy.com/manual/berteltorp/NeoEloquent?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ulobby/NeoEloquent&amp;utm_campaign=Badge_Grade)
 
 # NeoEloquent
-Eloquent-style Model syntax for reading and writing to a Neo4j graph database in Laravel 8. This package is a fork of mirkos93's fork of ulobby's fork of Vinelab's original NeoEloquent package. The fork train continues as we endeavor to bring this highly useful package into modern Laravel and PHP.
+Eloquent-style Model syntax for reading and writing to a Neo4j graph database in Laravel 8. This package is a fork of mirkos93's fork of ulobby's fork of Vinelab's original NeoEloquent package. The fork train continues as we endeavor to bring this highly useful package into modern Laravel and PHP. The project is currently a work in progress, but much of the baseline core required functionality is working (create and save labels, create and save relationships, seed data, modify existing data with migrations, delete data, etc.)
 
 ## Quick Reference
 
@@ -70,7 +70,7 @@ Add the connection defaults:
 ]
 ```
 
-You may also use both a SQL connection and a neo4j connection simultaneously by specifying variables for both.
+You may also use both a SQL connection and a Neo4j connection simultaneously by specifying variables for both.
 
 ```php
 'connections' => [
