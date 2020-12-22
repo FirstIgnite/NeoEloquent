@@ -28,7 +28,7 @@ Add the package to your `composer.json` and run `composer update neoeloquent`.
     "repositories": [
         {
             "type": "vcs"
-            "url": https://gitlab.com/firstignite/neoeloquent"
+            "url": "https://gitlab.com/firstignite/neoeloquent"
         }
     ],
     "require": {
