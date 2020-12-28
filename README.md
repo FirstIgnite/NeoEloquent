@@ -416,7 +416,7 @@ class User extends NeoEloquent {
 In order to keep things simple but still involving the three models we will have to pass the
 `$morph` which is any `commentable` model, in our case it's either a `Video` or a `Post` model.
 
-> **Note:** Make sure to have it defaulting to `null` so that we can Dynamicly or Eager load
+> **Note:** Make sure to have it defaulting to `null` so that we can Dynamically or Eager load
 with `$user->comments` later on.
 
 Creating a `Comment` with the `create()` method.
@@ -473,7 +473,7 @@ class Video extends NeoEloquent {
 }
 ```
 
-##### Dynamicly Loading Morph Model
+##### Dynamically Loading Morph Model
 
 ```php
 $video = Video::find(3);
