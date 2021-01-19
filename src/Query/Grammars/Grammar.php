@@ -46,8 +46,8 @@ class Grammar extends IlluminateGrammar
         if (strpos($property, '.') !== false) {
             $property = explode('.', $property)[1];
         }
-
-        return '{'.$property.'}';
+        // change to $ instead of {} for neo4j 4.0
+        return '$'.$property;
     }
 
     /**
