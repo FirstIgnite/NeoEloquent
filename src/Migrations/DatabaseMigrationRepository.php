@@ -7,6 +7,8 @@ use Illuminate\Database\Migrations\MigrationRepositoryInterface;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\Schema\Builder as SchemaBuilder;
 
+use Illuminate\Support\Facades\Log;
+
 class DatabaseMigrationRepository implements MigrationRepositoryInterface
 {
     /**
@@ -83,7 +85,12 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
      */
     public function getNextBatchNumber()
     {
-        return $this->getLastBatchNumber() + 1;
+        //! this is not ideal. needs troubleshooting elsewhere
+        $lastBatch = $this->getLastBatchNumber();
+        if (get_class($lastBatch) == 'Everyman\Neo4j\Query\Row') {
+                $lastBatch = $lastBatch->getAll()['raw'][0];
+        }
+        return $lastBatch + 1;
     }
 
     /**
