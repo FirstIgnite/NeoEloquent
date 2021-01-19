@@ -659,6 +659,7 @@ class CypherGrammar extends Grammar
                 // we MATCH the nodes that we need to attach, set the conditions
                 // on the records that we need to attach with WHERE and then
                 // CREATE these relationships.
+                //! This is where we'd change compilation to work with primary keys
                 $attachments['matches'][] = "({$identifier}{$nodeLabel})";
                 $attachments['wheres'][] = "id($identifier) IN [".implode(', ', $attach).']';
                 $attachments['relations'][] = $this->craftRelation(

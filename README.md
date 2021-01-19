@@ -2,12 +2,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4b18de9ea45b4b2c96a8f78a25db6480)](https://www.codacy.com/manual/berteltorp/NeoEloquent?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ulobby/NeoEloquent&amp;utm_campaign=Badge_Grade)
 
 # NeoEloquent
-Neo4j Graph Eloquent Driver for Laravel, this is a fork of [Vinelab/NeoEloquent](https://github.com/Vinelab/NeoEloquent) that created by [Ulobby](https://www.ulobby.eu) as we mistakenly believed that the original repo was not maintained anymore. After getting in touch with the orginal author ([Abed Halawi](https://github.com/Mulkave)) we have decided to pour our love and code into reinvigorating the original repo over at [Vinelab/NeoEloquent](https://github.com/Vinelab/NeoEloquent)
-
-At Ulobby use NeoEloquent in production for a lot of the crud operations in our Laravel based SaaS. We usually end up writing raw cypher for more complex operations, as a consequence of this we currently do not recommend using polymorphic-relationships.
-
-## Chat & Support
-Join the [Official Neo4j Slack Group](https://neo4j.com/blog/public-neo4j-users-slack-group/) and use the #neo4j-php channel.
+Eloquent-style Model syntax for reading and writing to a Neo4j graph database in Laravel 8. This package is a fork of mirkos93's fork of ulobby's fork of Vinelab's original NeoEloquent package. The fork train continues as we endeavor to bring this highly useful package into modern Laravel and PHP. The project is currently a work in progress, but much of the baseline core required functionality is working (create and save labels, create and save relationships, seed data, modify existing data with migrations, delete data, etc.)
 
 ## Quick Reference
 
@@ -24,16 +19,20 @@ Join the [Official Neo4j Slack Group](https://neo4j.com/blog/public-neo4j-users-
 
 ## Installation
 
-Add the package to your `composer.json` and run `composer update`.
+Add the package to your `composer.json` and run `composer update neoeloquent`.
 
-### Laravel 5
-
-#### 5.8
+### Laravel 8
 
 ```json
 {
+    "repositories": [
+        {
+            "type": "vcs"
+            "url": "https://gitlab.com/firstignite/neoeloquent"
+        }
+    ],
     "require": {
-        "ulobby/neoeloquent": "^1.4.7"
+        "ulobby/neoeloquent": "dev-master"
     }
 }
 ```
@@ -41,7 +40,7 @@ Add the package to your `composer.json` and run `composer update`.
 Add the service provider in `app/config/app.php`:
 
 ```php
-'Vinelab\NeoEloquent\NeoEloquentServiceProvider',
+'Vinelab\NeoEloquent\NeoEloquentServiceProvider::class',
 ```
 
 The service provider will register all the required classes for this package and will also alias
@@ -63,13 +62,32 @@ Add the connection defaults:
 'connections' => [
     'neo4j' => [
         'driver' => 'neo4j',
-        'host'   => env('DB_HOST', 'localhost'),
+        'host'   => env('DB_HOST', '127.0.0.1'),
         'port'   => env('DB_PORT', '7474'),
         'username' => env('DB_USERNAME', null),
         'password' => env('DB_PASSWORD', null)
     ]
 ]
 ```
+
+You may also use both a SQL connection and a Neo4j connection simultaneously by specifying variables for both.
+
+```php
+'connections' => [
+    'mysql' => [
+        'driver' => 'mysql',
+        'url' => env('DATABASE_URL'),
+        'host' => env('DB_HOST_SECOND', '127.0.0.1'),
+        'port' => env('DB_PORT_SECOND', '3306'),
+        'database' => env('DB_DATABASE_SECOND', null),
+        'username' => env('DB_USERNAME_SECOND', null),
+        'password' => env('DB_PASSWORD_SECOND', null),
+        'unix_socket' => env('DB_SOCKET_SECOND', ''),
+    ]
+]
+```
+
+You may then specify a $connection attribute in your models, or specify the SQL connection in Laravel packages that are storing records you would like to keep separate from your graph data.
 
 ### Migration Setup
 
@@ -398,7 +416,7 @@ class User extends NeoEloquent {
 In order to keep things simple but still involving the three models we will have to pass the
 `$morph` which is any `commentable` model, in our case it's either a `Video` or a `Post` model.
 
-> **Note:** Make sure to have it defaulting to `null` so that we can Dynamicly or Eager load
+> **Note:** Make sure to have it defaulting to `null` so that we can Dynamically or Eager load
 with `$user->comments` later on.
 
 Creating a `Comment` with the `create()` method.
@@ -455,7 +473,7 @@ class Video extends NeoEloquent {
 }
 ```
 
-##### Dynamicly Loading Morph Model
+##### Dynamically Loading Morph Model
 
 ```php
 $video = Video::find(3);
