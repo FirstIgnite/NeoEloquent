@@ -35,6 +35,10 @@
         "codacy/coverage": "dev-master"
     },
     "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://gitlab.com/firstignite/neo4jphp"
+        }
     ],
     "autoload": {
         "psr-4": {
