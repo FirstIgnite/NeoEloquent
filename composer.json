@@ -26,7 +26,7 @@
         "illuminate/pagination": ">=7",
         "illuminate/events": ">=7",
         "illuminate/console": ">=7",
-        "denisgold/neo4jphp": "dev-master",
+        "denisgold/neo4jphp": "^0.1.3",
         "nesbot/carbon": "^2.0"
     },
     "require-dev": {
