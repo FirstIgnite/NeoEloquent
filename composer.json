@@ -19,6 +19,12 @@
             "email": "ulobby@ulobby.eu"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://gitlab.com/firstignite/neo4jphp"
+        }
+    ],
     "require": {
         "php": ">=7.2",
         "illuminate/support": ">=7",
@@ -34,12 +40,6 @@
         "mockery/mockery": "1.*",
         "codacy/coverage": "dev-master"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://gitlab.com/firstignite/neo4jphp"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Vinelab\\NeoEloquent\\": "src"
