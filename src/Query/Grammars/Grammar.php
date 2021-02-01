@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Database\Query\Grammars\Grammar as IlluminateGrammar;
 
+use Illuminate\Support\Facades\Log;
+
 class Grammar extends IlluminateGrammar
 {
     /**
