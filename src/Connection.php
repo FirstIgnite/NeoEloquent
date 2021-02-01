@@ -14,6 +14,8 @@ use Illuminate\Support\Arr;
 use Vinelab\NeoEloquent\Query\Builder;
 use Vinelab\NeoEloquent\Query\Processors\Processor;
 
+use Illuminate\Support\Facades\Log;
+
 class Connection extends IlluminateConnection
 {
     /**
