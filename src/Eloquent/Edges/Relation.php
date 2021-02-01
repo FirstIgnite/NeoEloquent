@@ -10,6 +10,8 @@ use Vinelab\NeoEloquent\Eloquent\Builder;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\NoEdgeDirectionException;
 
+use Illuminate\Support\Facades\Log;
+
 abstract class Relation extends Delegate
 {
     /**
