@@ -32,7 +32,7 @@
         "illuminate/pagination": ">=7",
         "illuminate/events": ">=7",
         "illuminate/console": ">=7",
-        "heydavid713/neo4jphp": "^0.1.5",
+        "heydavid713/neo4jphp": "^0.1.6",
         "nesbot/carbon": "^2.0"
     },
     "require-dev": {
