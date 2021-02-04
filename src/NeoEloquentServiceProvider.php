@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\Schema\Grammars\CypherGrammar;
 
+use Illuminate\Support\Facades\Log;
+
 class NeoEloquentServiceProvider extends ServiceProvider
 {
     /**
