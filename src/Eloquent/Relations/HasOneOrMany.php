@@ -11,6 +11,8 @@ use Vinelab\NeoEloquent\Eloquent\Edges\Finder;
 use Vinelab\NeoEloquent\Eloquent\Edges\Relation;
 use Vinelab\NeoEloquent\Eloquent\Model;
 
+use Illuminate\Support\Facades\Log;
+
 abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationInterface
 {
     /**
