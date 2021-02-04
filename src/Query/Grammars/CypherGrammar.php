@@ -6,6 +6,8 @@ use Illuminate\Database\Query\Builder;
 use Vinelab\NeoEloquent\Exceptions\Exception;
 use Vinelab\NeoEloquent\Exceptions\InvalidCypherGrammarComponentException;
 
+use Illuminate\Support\Facades\Log;
+
 class CypherGrammar extends Grammar
 {
     protected $selectComponents = [
