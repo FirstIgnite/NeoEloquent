@@ -547,7 +547,14 @@ class Builder extends IlluminateQueryBuilder
         // Since every insert gets treated like a batch insert, we will make sure the
         // bindings are structured in a way that is convenient for building these
         // inserts statements by verifying the elements are actually an array.
-        if (!is_array(reset($values))) {
+
+        // we are now checking, in addition to the original condition, if the first
+        // key exists or if this is a regular numerically indexed array. the idea is
+        // that if this was a batch insert (argument is an array of arrays of model
+        // attributes), then there would be no explicit keys. however, if it is a
+        // single array thats just a model, then it'll have key names for its property
+        // names. we get here from performInsert() in the native Eloquent/Model.php btw
+        if (!is_array(reset($values)) || key($values)!==0) {
             $values = [$values];
         }
 
@@ -556,6 +563,7 @@ class Builder extends IlluminateQueryBuilder
         // inserts statements by verifying the elements are actually an array.
         else {
             foreach ($values as $key => $value) {
+                // if value is DateTime, format it correctly
                 $value = $this->formatValue($value);
                 ksort($value);
                 $values[$key] = $value;

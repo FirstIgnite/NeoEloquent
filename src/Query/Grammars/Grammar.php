@@ -168,6 +168,10 @@ class Grammar extends IlluminateGrammar
                 $value = ($value) ? 'true' : 'false';
             }
 
+            elseif (is_array($value)) {
+                $value = json_encode($value);
+            }
+
             return $value;
         }, $values);
 
@@ -297,7 +301,10 @@ class Grammar extends IlluminateGrammar
             }
 
             $key = $this->propertize($key);
-            $value = $this->valufy($value);
+            // pass in an array here because theres a conditional that always expects an array in valufy,
+            // but it was causing issues with array properties. this should preserve functionality for the
+            // one other valufy() call i could find and be logically equivalent when called from this function.
+            $value = $this->valufy([$value]);
             $properties[] = "$key: $value";
         }
 
