@@ -581,6 +581,7 @@ class CypherGrammar extends Grammar
         $values = array_map(function ($entity) use ($label) {
             return ['label' => $label, 'bindings' => $entity];
         }, $values);
+
         // We need to build a list of parameter place-holders of values that are bound to the query.
         return 'CREATE '.$this->prepareEntities($values);
     }
