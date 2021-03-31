@@ -167,13 +167,15 @@ class BelongsToMany extends HasOneOrMany
      *
      * @param \Illuminate\Database\Eloquent\Model $model
      * @param array                               $attributes
+     * @param bool                                $overwrite
      *
      * @return \Vinelab\NeoEloquent\Eloquent\Edges\Edge[In|Out]
      */
-    public function getEdge(EloquentModel $model = null, $attributes = [])
+    public function getEdge(EloquentModel $model = null, $attributes = [], $overwrite = false)
     {
         $model = (!is_null($model)) ? $model : $this->related;
+        $unique = $overwrite;
 
-        return new EdgeIn($this->query, $this->parent, $model, $this->type, $attributes);
+        return new EdgeIn($this->query, $this->parent, $model, $this->type, $attributes, $unique);
     }
 }

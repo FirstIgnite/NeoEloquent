@@ -18,6 +18,7 @@ use Vinelab\NeoEloquent\Helpers;
 use Vinelab\NeoEloquent\Query\Builder as QueryBuilder;
 
 use Illuminate\Support\Facades\Log;
+use DB;
 
 abstract class Model extends IlluminateModel
 {
@@ -721,6 +722,75 @@ abstract class Model extends IlluminateModel
             $this->fireModelEvent('updated', false);
         } else {
             return false;
+        }
+    }
+
+    public static function insertEdges($edges = [])
+    {
+        try {
+
+            $statements = [];
+
+            foreach ($edges as $edge) {
+                $statement = '';
+                $parentId = $edge->parent()['id'];
+                $relatedId = $edge->related()['id'];
+                $relType = $edge->getType();
+                $created_at = $updated_at = \Carbon\Carbon::now();
+
+                $relProperties = ":{$relType} {";
+
+                if (count($edge->toArray()) > 0) {
+                    foreach ($edge->toArray() as $key => $property) {
+                        if (is_string($property))
+                            $relProperties .= "{$key}: \"{$property}\", ";
+                        elseif (is_null($property))
+                            $relProperties .= "{$key}: null, ";
+                        elseif (is_bool($property))
+                            $relProperties .= "{$key}: ".($property ? "true" : "false").", ";
+                        elseif (is_array($property))
+                            $relProperties .= "{$key}: ".json_encode($property).", ";
+                        else
+                            $relProperties .= "{$key}: {$property}, ";
+                    }
+                }
+
+                if (!$edge->exists())
+                    $relProperties .= "created_at: '{$created_at}', ";
+
+                $relProperties .= "updated_at: '{$updated_at}' } ";
+
+                // merge for unique, create if duplicates are allowed
+                if ($edge->isUnique())
+                    $relStatement = 'MERGE (n)';
+                else
+                    $relStatement = 'CREATE (n)';
+
+                if ($edge->isDirectionIn())
+                    $relStatement .= "<-[{$relProperties}]-(o) ";
+                elseif ($edge->isDirectionOut())
+                    $relStatement .= "-[{$relProperties}]->(o) ";
+                else
+                    $relStatement .= "-[{$relProperties}]-(o) ";
+
+                $statement .= "MATCH (n) MATCH (o) WHERE id(n)={$parentId} AND id(o)={$relatedId} ";
+
+                // only delete when no more than one is allowed
+                if ($edge->isUnique())
+                    $statement .= "OPTIONAL MATCH (n)-[r:{$relType}]-(o) DELETE r ".$relStatement;
+                                  // "\nWITH n as x, r as y, o as z\n";
+                else
+                    $statement .= $relStatement;
+
+                $statements[] = $statement;
+
+
+            } // end foreach edges
+
+            return $edges[0]->getConnection()->getClient()->executeBulkCypherQuery($statements);
+        }
+        catch (Exception $exception) {
+            throw $exception;
         }
     }
 }

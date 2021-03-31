@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut;
 use Vinelab\NeoEloquent\Eloquent\Model;
 
+use Log;
+
 class HasOne extends HasOneOrMany
 {
     /**
@@ -117,15 +119,19 @@ class HasOne extends HasOneOrMany
      *
      * @param \Illuminate\Database\Eloquent\Model $model
      * @param array                               $attributes
+     * @param bool                                $overwrite
      *
      * @return \Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut
      */
-    public function getEdge(EloquentModel $model = null, $attributes = [])
+    public function getEdge(EloquentModel $model = null, $attributes = [], $overwrite = true)
     {
         $model = (!is_null($model)) ? $model : $this->parent->{$this->relation};
 
         // Indicate a unique relation since this only involves one other model.
-        $unique = true;
+        $unique = $overwrite;
+
+        // When doing a bulk insert, we want edges to be overwritten when persisted.
+        // $overwrite = true;
 
         return new EdgeOut($this->query, $this->parent, $model, $this->foreignKey, $attributes, $unique);
     }

@@ -99,15 +99,16 @@ class BelongsTo extends OneRelation
      *
      * @param \Illuminate\Database\Eloquent\Model $model
      * @param array                               $attributes
+     * @param bool                                $overwrite
      *
      * @return \Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn
      */
-    public function getEdge(EloquentModel $model = null, $attributes = [])
+    public function getEdge(EloquentModel $model = null, $attributes = [], $overwrite = true)
     {
         $model = (!is_null($model)) ? $model : $this->parent->{$this->relationName};
 
         // Indicate a unique relation since this only involves one other model.
-        $unique = true;
+        $unique = $overwrite;
 
         return new EdgeIn($this->query, $this->parent, $model, $this->foreignKey, $attributes, $unique);
     }

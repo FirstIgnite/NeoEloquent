@@ -129,6 +129,7 @@ abstract class Relation extends Delegate
      * @param \Vinelab\NeoEloquent\Eloquent\Model   $parent
      * @param \Vinelab\NeoEloquent\Eloquent\Model   $related
      * @param string                                $type
+     * @param bool                                  $overwrite
      */
     public function __construct(Builder $query, Model $parent, Model $related, $type, $attributes = [], $unique = false)
     {
@@ -657,6 +658,16 @@ abstract class Relation extends Delegate
     public function setUpdatedAt($value)
     {
         $this->{static::UPDATED_AT} = $value;
+    }
+
+    /**
+     * Return the relationship type
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**

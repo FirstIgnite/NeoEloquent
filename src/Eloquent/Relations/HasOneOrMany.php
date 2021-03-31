@@ -107,7 +107,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
      *
      * @return \Vinelab\NeoEloquent\Eloquent\Edges\Edge[In,Out, etc.]
      */
-    abstract public function getEdge(EloquentModel $model = null, $attributes = []);
+    abstract public function getEdge(EloquentModel $model = null, $attributes = [], $overwrite);
 
     /**
      * Get the edge between the parent model and the given model or
