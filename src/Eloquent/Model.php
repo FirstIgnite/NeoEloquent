@@ -787,7 +787,10 @@ abstract class Model extends IlluminateModel
 
             } // end foreach edges
 
-            return $edges[0]->getConnection()->getClient()->executeBulkCypherQuery($statements);
+            if (isset($edges[0]))
+                return $edges[0]->getConnection()->getClient()->executeBulkCypherQuery($statements);
+            else
+                return false;
         }
         catch (Exception $exception) {
             throw $exception;
