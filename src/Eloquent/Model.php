@@ -29,6 +29,14 @@ abstract class Model extends IlluminateModel
      */
     public function __construct()
     {
+        $this->bootIfNotBooted();
+
+        $this->initializeTraits();
+
+        $this->syncOriginal();
+
+        $this->fill($attributes);
+
         $this->connection = config('database.default');
     }
 
