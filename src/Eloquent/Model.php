@@ -22,7 +22,15 @@ use DB;
 
 abstract class Model extends IlluminateModel
 {
-    protected $connection = 'neo4j';
+    protected $connection = '';
+
+    /**
+     * Set our database connection on the Model
+     */
+    public function __construct()
+    {
+        $this->connection = config('database.default');
+    }
 
     /**
      * The node label.
