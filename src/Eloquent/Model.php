@@ -27,7 +27,7 @@ abstract class Model extends IlluminateModel
     /**
      * Set our database connection on the Model
      */
-    public function __construct()
+    public function __construct(array $attributes = [])
     {
         $this->bootIfNotBooted();
 
