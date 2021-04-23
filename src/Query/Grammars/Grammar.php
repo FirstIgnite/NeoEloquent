@@ -169,7 +169,7 @@ class Grammar extends IlluminateGrammar
             }
 
             elseif (is_array($value)) {
-                $value = json_encode($value);
+                $value = str_replace('"', '\'', json_encode(array_values($value), JSON_UNESCAPED_SLASHES));
             }
 
             return $value;
