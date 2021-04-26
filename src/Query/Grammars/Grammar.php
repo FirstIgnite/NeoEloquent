@@ -169,6 +169,10 @@ class Grammar extends IlluminateGrammar
             }
 
             elseif (is_array($value)) {
+                // Double quotes were causing errors on some platforms (but not my own?) because the escape sequences
+                // that came from encodeData() in Curl.php could not be interpreted inside of double quotes, only singles.
+                // This is unrelated to JSON_UNESCAPED_SLASHES, which is just to prevent double encoding inside of that
+                // encodeData() function. We were ending up with sequences of escapes (e.g. `\\\`).
                 $value = str_replace('"', '\'', json_encode(array_values($value), JSON_UNESCAPED_SLASHES));
             }
 
