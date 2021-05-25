@@ -136,10 +136,8 @@ abstract class OneRelation extends BelongsTo implements RelationInterface
     {
         try {
             if (!$id instanceof Model && !$id instanceof \Illuminate\Support\Collection) {
-                return 'me';
                 $id = $this->modelsFromIds($id);
             } elseif (!is_array($id) && !$id instanceof \Illuminate\Support\Collection) {
-                return 'too';
                 $id = [$id];
             } elseif (!$id[0] instanceof Model) {
                 throw new \ErrorException('First argument must be a model, a primary key, or a list of models.');
