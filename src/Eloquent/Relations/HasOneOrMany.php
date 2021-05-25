@@ -313,6 +313,20 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
     }
 
     /**
+     * Attach a model to the parent, sharing a name with OneRelation.
+     *
+     * @param mixed $id
+     * @param array $attributes
+     * @param bool  $touch
+     *
+     * @return void
+     */
+    public function relate($id, $attributes = [], $touch = true)
+    {
+        return $this->attach($id, $attributes, $touch);
+    }
+
+    /**
      * Attach a model to the parent.
      *
      * @param mixed $id
@@ -353,35 +367,42 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
     /**
      * Detach models from the relationship.
      *
-     * @param int|array $ids
+     * @param int|array|Model $ids
      * @param bool      $touch
      *
      * @return int
      */
     public function detach($id = [], $touch = true)
     {
-        if (!$id instanceof Model && !$id instanceof Collection) {
-            $id = $this->modelsFromIds($id);
-        } elseif (!is_array($id) && !$id instanceof Collection) {
-            $id = [$id];
+        try {
+            if (!$id instanceof Model && !$id instanceof Collection) {
+                $id = $this->modelsFromIds($id);
+            } elseif (!is_array($id) && !$id instanceof Collection) {
+                $id = [$id];
+            } elseif ($id instanceof Model) {
+                $id = $id->{$id->getKeyName()};
+            }
+
+            // Prepare for a batch operation to take place so that we don't
+            // overwhelm the database with many delete hits.
+            // $this->finder->prepareBatch();
+
+            foreach ($id as $model) {
+                $edge = $this->edge($model);
+                if (!is_null($edge))
+                    $edge->delete();
+            }
+
+            // $results = $this->finder->commitBatch();
+
+            if ($touch) {
+                $this->touchIfTouching();
+            }
+
+            return true;
+        } catch (\ErrorException $e) {
+            return $e;
         }
-
-        // Prepare for a batch operation to take place so that we don't
-        // overwhelm the database with many delete hits.
-        $this->finder->prepareBatch();
-
-        foreach ($id as $model) {
-            $edge = $this->edge($model);
-            $edge->delete();
-        }
-
-        $results = $this->finder->commitBatch();
-
-        if ($touch) {
-            $this->touchIfTouching();
-        }
-
-        return $results;
     }
 
     /**

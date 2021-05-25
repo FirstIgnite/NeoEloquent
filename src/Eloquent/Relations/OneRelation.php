@@ -65,6 +65,7 @@ abstract class OneRelation extends BelongsTo implements RelationInterface
      * Associate the model instance to the given parent.
      *
      * @param \Illuminate\Database\Eloquent\Model $model
+     * @param array $attributes
      *
      * @return \Vinelab\NeoEloquent\Eloquent\Edges\Relation
      */
@@ -108,6 +109,66 @@ abstract class OneRelation extends BelongsTo implements RelationInterface
     }
 
     /**
+     * Associate the model instance to the given parent, sharing a name with HasOneOrMany.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @param array $attributes
+     *
+     * @return \Vinelab\NeoEloquent\Eloquent\Edges\Relation
+     */
+    public function relate($model, $attributes = [])
+    {
+        $edge = $this->associate($model, $attributes);
+        $edge->save();
+        return $edge;
+    }
+
+    /**
+     * Detach the model instance to the given parent, sharing a name with HasOneOrMany.
+     * Will take a model or a primary key
+     *
+     * @param mixed $id
+     * @param array $attributes
+     *
+     * @return \Vinelab\NeoEloquent\Eloquent\Edges\Relation
+     */
+    public function detach($id = [], $touch = true)
+    {
+        try {
+            if (!$id instanceof Model && !$id instanceof \Illuminate\Support\Collection) {
+                return 'me';
+                $id = $this->modelsFromIds($id);
+            } elseif (!is_array($id) && !$id instanceof \Illuminate\Support\Collection) {
+                return 'too';
+                $id = [$id];
+            } elseif (!$id[0] instanceof Model) {
+                throw new \ErrorException('First argument must be a model, a primary key, or a list of models.');
+            }
+
+            foreach ($id as $model) {
+                $edge = $this->edge($model);
+                if (!is_null($edge))
+                    $edge->delete();
+            }
+            return true;
+        } catch (\ErrorException $e) {
+            return $e;
+        }
+    }
+
+    /**
+     * Get the related models out of their Ids.
+     *
+     * @param array $ids
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function modelsFromIds($ids)
+    {
+        return $this->related->whereIn($this->related->getKeyName(), (array) $ids)->get();
+    }
+
+    /**
      * Get the edge between the parent model and the given model or
      * the related model determined by the relation function name.
      *
@@ -118,6 +179,21 @@ abstract class OneRelation extends BelongsTo implements RelationInterface
     public function edge(Model $model = null)
     {
         return $this->getEdge($model)->current();
+    }
+
+    /**
+     * Get the edge between the parent model and the given model or
+     * the related model determined by the relation function name.
+     * Always a collection of one, this function exists to enable
+     * edges() to be called on OneRelations without changing functionality.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function edges(Model $model = null)
+    {
+        return collect($this->getEdge($model)->current());
     }
 
     /**
