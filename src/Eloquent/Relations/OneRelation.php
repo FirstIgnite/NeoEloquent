@@ -191,7 +191,7 @@ abstract class OneRelation extends BelongsTo implements RelationInterface
      */
     public function edges(Model $model = null)
     {
-        return collect($this->getEdge($model)->current());
+        return collect([$this->getEdge($model)->current()]);
     }
 
     /**
