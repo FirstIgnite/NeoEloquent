@@ -4,6 +4,7 @@ namespace Vinelab\NeoEloquent\Eloquent;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model as IlluminateModel;
+use Illuminate\Database\Eloquent\Builder as IlluminateBuilder;
 use Vinelab\NeoEloquent\Eloquent\Builder as EloquentBuilder;
 use Vinelab\NeoEloquent\Eloquent\Relations\BelongsTo;
 use Vinelab\NeoEloquent\Eloquent\Relations\BelongsToMany;
@@ -98,6 +99,61 @@ abstract class Model extends IlluminateModel
         $processor = $conn->getPostProcessor();
 
         return new QueryBuilder($conn, $grammar, $processor);
+    }
+
+    /**
+     * Perform a model insert operation.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return bool
+     */
+    protected function performInsert(IlluminateBuilder $query)
+    {
+        if ($this->fireModelEvent('creating') === false) {
+            return false;
+        }
+
+        // First we'll need to create a fresh query instance and touch the creation and
+        // update timestamps on this model, which are maintained by us for developer
+        // convenience. After, we will just continue saving these model instances.
+        if ($this->usesTimestamps()) {
+            $this->updateTimestamps();
+        }
+
+        // If the model has an incrementing key, we can use the "insertGetId" method on
+        // the query builder, which will give us back the final inserted ID for this
+        // table from the database. Not all tables have to be incrementing though.
+        $attributes = $this->getAttributesForInsert();
+
+        // We don't use incrementing in the same way as Laravel for SQL, so set the
+        // ID on every insert. Developers are not passing in an id column the way
+        // that Laravel appears to expect SQL devs to do on non-incrementing columns
+        $this->insertAndSetId($query, $attributes);
+
+        // We will go ahead and set the exists property to true, so that it is set when
+        // the created event is fired, just in case the developer tries to update it
+        // during the event. This will allow them to do so and run an update here.
+        $this->exists = true;
+
+        $this->wasRecentlyCreated = true;
+
+        $this->fireModelEvent('created', false);
+
+        return true;
+    }
+
+    /**
+     * Insert the given attributes and set the ID on the model.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  array  $attributes
+     * @return void
+     */
+    protected function insertAndSetId(IlluminateBuilder $query, $attributes)
+    {
+        $id = $query->insertGetId($attributes, $keyName = $this->getKeyName());
+
+        $this->setAttribute('id', $id);
     }
 
     /**
