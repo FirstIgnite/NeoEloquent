@@ -102,6 +102,7 @@ abstract class Model extends IlluminateModel
     }
 
     /**
+     * @override
      * Perform a model insert operation.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -143,6 +144,7 @@ abstract class Model extends IlluminateModel
     }
 
     /**
+     * @override
      * Insert the given attributes and set the ID on the model.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query

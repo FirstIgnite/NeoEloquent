@@ -88,9 +88,10 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
         //! this is not ideal. needs troubleshooting elsewhere
         $lastBatch = $this->getLastBatchNumber();
         if (!is_null($lastBatch) && !is_int($lastBatch))
-            if (get_class($lastBatch) == 'Everyman\Neo4j\Query\Row') {
-                    $lastBatch = $lastBatch->getAll()['raw'][0];
-            }
+            if (is_object($lastBatch))
+                if (get_class($lastBatch) == 'Everyman\Neo4j\Query\Row') {
+                        $lastBatch = $lastBatch->getAll()['raw'][0];
+                }
         return $lastBatch + 1;
     }
 
