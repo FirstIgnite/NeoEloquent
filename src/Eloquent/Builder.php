@@ -47,13 +47,8 @@ class Builder extends IlluminateBuilder
                 return is_numeric($id) ? (int) $id : $id;
             }, $id), $properties);
         }
-
-        if ($this->model->getKeyName() === 'id') {
-            // ids are treated differently in neo4j so we have to adapt the query to them.
-            $this->query->where($this->model->getKeyName().'('.$this->query->modelAsNode().')', '=', $id);
-        } else {
-            $this->query->where($this->model->getKeyName(), '=', $id);
-        }
+        
+        $this->query->where($this->model->getKeyName(), '=', $id);
 
         return $this->first($properties);
     }
