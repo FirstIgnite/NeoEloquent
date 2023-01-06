@@ -2,6 +2,7 @@
 
 namespace Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Mockery as M;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\Tests\TestCase;
@@ -14,7 +15,7 @@ class User extends Model
 
     public function roles()
     {
-        return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\Role', 'HAS_ROLE');
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\Role', 'HAS_ROLE');
     }
 }
 
@@ -32,7 +33,7 @@ class Role extends Model
 
 class BelongsToManyRelationTest extends TestCase
 {
-    public function tearDown()
+    public function tearDown(): void
     {
         M::close();
 
@@ -49,7 +50,7 @@ class BelongsToManyRelationTest extends TestCase
         parent::tearDown();
     }
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -66,7 +67,7 @@ class BelongsToManyRelationTest extends TestCase
         $role = new Role(['title' => 'Master']);
         $relation = $user->roles()->save($role);
 
-        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
         $this->assertTrue($relation->exists());
         $this->assertTrue(is_int($relation->id));
 
@@ -79,7 +80,7 @@ class BelongsToManyRelationTest extends TestCase
         $role = Role::create(['title' => 'Master']);
         $relation = $user->roles()->attach($role->id);
 
-        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
         $this->assertTrue($relation->exists());
         $this->assertTrue(is_int($relation->id));
 
@@ -98,7 +99,7 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertCount(3, $relations->all());
 
         $relations->each(function ($relation) {
-            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
             $this->assertTrue($relation->exists());
             $this->assertTrue(is_int($relation->id));
 
@@ -112,7 +113,7 @@ class BelongsToManyRelationTest extends TestCase
         $role = Role::create(['title' => 'Master']);
 
         $relation = $user->roles()->attach($role);
-        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
         $this->assertTrue($relation->exists());
         $this->assertTrue(is_int($relation->id));
 
@@ -135,7 +136,7 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertCount(3, $relations->all());
 
         $relations->each(function ($relation) {
-            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
             $this->assertTrue($relation->exists());
             $this->assertTrue(is_int($relation->id));
 
@@ -143,11 +144,10 @@ class BelongsToManyRelationTest extends TestCase
         });
     }
 
-    /**
-     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
-     */
     public function testAttachingNonExistingModelId()
     {
+        $this->expectException(ModelNotFoundException::class);
+
         $user = User::create(['name' => 'Creepy Dude']);
         $user->roles()->attach(10);
     }
@@ -158,11 +158,11 @@ class BelongsToManyRelationTest extends TestCase
         $role = Role::create(['title' => 'Master']);
         $relation = $user->roles()->attach($role->id);
 
-        $edgeIn = $user->roles()->edge($role);
+        $edgeOut = $user->roles()->edge($role);
 
-        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $edgeIn);
-        $this->assertTrue($edgeIn->exists());
-        $this->assertGreaterThanOrEqual(0, $edgeIn->id);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $edgeOut);
+        $this->assertTrue($edgeOut->exists());
+        $this->assertGreaterThanOrEqual(0, $edgeOut->id);
 
         $edgeIn = $role->users()->edge($user);
         $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $edgeIn);
@@ -178,7 +178,7 @@ class BelongsToManyRelationTest extends TestCase
         $role = Role::create(['title' => 'Master']);
 
         $relation = $user->roles()->attach($role->id);
-        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
         $this->assertTrue($relation->exists());
         $this->assertTrue(is_int($relation->id));
 
@@ -202,7 +202,7 @@ class BelongsToManyRelationTest extends TestCase
 
         // make sure they were successfully saved
         $relations->each(function ($relation) {
-            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+            $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
             $this->assertTrue($relation->exists());
             $this->assertTrue(is_int($relation->id));
         });

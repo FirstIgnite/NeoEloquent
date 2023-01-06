@@ -4,8 +4,9 @@ namespace Vinelab\NeoEloquent\Eloquent\Edges;
 
 use Carbon\Carbon;
 use DateTime;
-use Everyman\Neo4j\Relationship;
 use Illuminate\Database\Eloquent\Collection;
+use Vinelab\NeoEloquent\DatabaseDriver\Interfaces\NodeInterface;
+use Vinelab\NeoEloquent\DatabaseDriver\Interfaces\RelationInterface;
 use Vinelab\NeoEloquent\Eloquent\Builder;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\NoEdgeDirectionException;
@@ -24,13 +25,13 @@ abstract class Relation extends Delegate
     /**
      * The start node of the relationship.
      *
-     * @var \Everyman\Neo4j\Node
+     * @var NodeInterface
      */
     protected $start;
     /**
      * The end node of the relationship.
      *
-     * @var \Everyman\Neo4j\Node
+     * @var NodeInterface
      */
     protected $end;
 
@@ -89,7 +90,7 @@ abstract class Relation extends Delegate
     /**
      * The relationship instance.
      *
-     * @var \Everyman\Neo4j\Relationship
+     * @var RelationInterface
      */
     protected $relation;
 
@@ -207,10 +208,18 @@ abstract class Relation extends Delegate
         */
         if ($this->unique && !$this->exists()) {
             $parent = $this->asNode($this->parent);
-            $existing = $parent->getFirstRelationship((array) $this->type, $this->getRealDirection($this->direction));
+            $realDirection = $this->getRealDirection($this->direction);
+            $relationships = $parent->getRelationships($this->type, $realDirection);
 
-            if (!empty($existing)) {
-                $existing->delete();
+            foreach ($relationships as $relationship) {
+                $relatedNode = $realDirection === 'in' ? $relationship->getStartNode() : $relationship->getEndNode();
+                $relationshipLabels = $relatedNode->getLabels();
+
+                foreach ($relationshipLabels as $relationshipLabel) {
+                    if (in_array($relationshipLabel, (array) $this->related->getLabel())) {
+                        $relationship->delete();
+                    }
+                }
             }
         }
 
@@ -249,11 +258,11 @@ abstract class Relation extends Delegate
      * Create a new Relation of the current instance
      * from an existing database relation.
      *
-     * @param Everyman\Neo4j\Relationship $relation
+     * @param RelationInterface $relation
      *
      * @return static
      */
-    public function newFromRelation(Relationship $relation)
+    public function newFromRelation(RelationInterface $relation)
     {
         $instance = new static($this->query, $this->parent, $this->related, $this->type, $this->attributes, $this->unique);
 
@@ -265,7 +274,7 @@ abstract class Relation extends Delegate
     /**
      * Get the Neo4j relationship object.
      *
-     * @return \Everyman\Neo4j\Relationship
+     * @return RelationInterface
      */
     public function getReal()
     {
@@ -295,9 +304,10 @@ abstract class Relation extends Delegate
     /**
      * Set a given relationship on this relation.
      *
-     * @param \Everyman\Neo4j\Relationship $relation
+     * @param RelationInterface $relation
+     * @param bool              $debug
      */
-    public function setRelation(Relationship $relation, $debug = false)
+    public function setRelation(RelationInterface $relation, $debug = false)
     {
         // Set the relation object.
         $this->relation = $relation;
@@ -601,7 +611,7 @@ abstract class Relation extends Delegate
     /**
      * Get the left node of the relationship.
      *
-     * @return \Everyman\Neo4j\Node
+     * @return NodeInterface
      */
     public function getStartNode()
     {
@@ -611,7 +621,7 @@ abstract class Relation extends Delegate
     /**
      * Get the end Node of the relationship.
      *
-     * @return \Everyman\Neo4j\Node
+     * @return NodeInterface
      */
     public function getEndNode()
     {

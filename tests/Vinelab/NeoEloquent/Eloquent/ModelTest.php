@@ -22,7 +22,7 @@ class Table extends NeoEloquent
 
 class ModelTest extends TestCase
 {
-    public function tearDown()
+    public function tearDown(): void
     {
         M::close();
 
@@ -117,7 +117,7 @@ class ModelTest extends TestCase
 
         $strLabels = [];
         foreach ($labels as $lbl) {
-            $strLabels[] = $lbl->getName();
+            $strLabels[] = $lbl;
         }
 
         $this->assertTrue(in_array('Superuniqelabel1', $strLabels));
@@ -145,7 +145,7 @@ class ModelTest extends TestCase
         $labels = $node->getLabels(); //get labels as array on the Everyman nodes
         $strLabels = [];
         foreach ($labels as $lbl) {
-            $strLabels[] = $lbl->getName();
+            $strLabels[] = $lbl;
         }
 
         $this->assertFalse(in_array('Superuniqelabel2', $strLabels));

@@ -10,6 +10,7 @@ use Illuminate\Database\Query\Builder as IlluminateQueryBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Processors\Processor as IlluminateProcessor;
 use Vinelab\NeoEloquent\Connection;
+use Vinelab\NeoEloquent\DatabaseDriver\Interfaces\ClientInterface;
 use Vinelab\NeoEloquent\Query\Grammars\Grammar;
 
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class Builder extends IlluminateQueryBuilder
     /**
      * The database active client handler.
      *
-     * @var Everyman\Neo4j\Client
+     * @var ClientInterface
      */
     protected $client;
 
@@ -105,14 +106,18 @@ class Builder extends IlluminateQueryBuilder
     /**
      * Set the node's label which the query is targeting.
      *
-     * @param string $label
+     * @param string      $label
+     * @param string|null $as
      *
      * @param null $as
      * @return \Vinelab\NeoEloquent\Query\Builder|static
      */
-    public function from($label, $as = NULL)
+    public function from($label, $as = null)
     {
         $this->from = $label;
+
+        // $as is used only for implementation purposes
+        // by the original Builder contract.
 
         return $this;
     }
@@ -144,7 +149,8 @@ class Builder extends IlluminateQueryBuilder
         $id = $node->getId();
 
         // set the labels
-        $node->addLabels(array_map([$this, 'makeLabel'], $this->from));
+        $from = is_array($this->from) ? $this->from : [$this->from];
+        $node->addLabels(array_map([$this, 'makeLabel'], $from));
 
         return $id;
     }
@@ -163,8 +169,13 @@ class Builder extends IlluminateQueryBuilder
         $bindings = $this->getBindingsMergedWithValues($values);
 
         $updated = $this->connection->update($cypher, $bindings);
+        $updated = $updated->getResults();
 
-        return (isset($updated[0]) && isset($updated[0][0])) ? $updated[0][0] : 0;
+        if (!isset($updated[0])) {
+            return 0;
+        }
+
+        return reset($updated[0]);
     }
 
     /**
@@ -261,7 +272,7 @@ class Builder extends IlluminateQueryBuilder
         $row = null;
         if ($results->offsetExists(0)) {
             $row = $results->offsetGet(0);
-            $count = $row->offsetGet(0);
+            $count = reset($row);
 
             return $count;
         } else {
@@ -451,13 +462,13 @@ class Builder extends IlluminateQueryBuilder
      * Add a where between statement to the query.
      *
      * @param string $column
-     * @param array  $values
+     * @param iterable  $values
      * @param string $boolean
      * @param bool   $not
      *
      * @return \Illuminate\Database\Query\Builder|static
      */
-    public function whereBetween($column, array $values, $boolean = 'and', $not = false)
+    public function whereBetween($column, iterable $values, $boolean = 'and', $not = false)
     {
         $type = 'between';
 
@@ -825,7 +836,7 @@ class Builder extends IlluminateQueryBuilder
         $this->columns = $previousColumns;
 
         if ($results->valid()) {
-            return $results->current()[0];
+            return reset($results->getResults()[0]);
         }
     }
 
@@ -868,7 +879,7 @@ class Builder extends IlluminateQueryBuilder
      *
      * @param string $label
      *
-     * @return Everyman\Neo4j\Label
+     * @return string
      */
     public function makeLabel($label)
     {
@@ -953,6 +964,7 @@ class Builder extends IlluminateQueryBuilder
         $cypher = $this->grammar->compileUpdateLabels($this, $labels, $operation);
 
         $updated = $this->connection->update($cypher, $this->getBindings());
+        $updated = $updated->getResults();
 
         return (isset($updated[0]) && isset($updated[0][0])) ? $updated[0][0] : 0;
     }
