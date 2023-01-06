@@ -27,11 +27,11 @@
     ],
     "require": {
         "php": ">=7.3",
-        "illuminate/support": ">=7",
-        "illuminate/database": ">=7",
-        "illuminate/pagination": ">=7",
-        "illuminate/events": ">=7",
-        "illuminate/console": ">=7",
+        "illuminate/support": ">=8",
+        "illuminate/database": ">=8",
+        "illuminate/pagination": ">=8",
+        "illuminate/events": ">=8",
+        "illuminate/console": ">=8",
         "nesbot/carbon": "^2.5",
         "laudis/neo4j-php-client": "^2.4",
         "ext-json": "*"
