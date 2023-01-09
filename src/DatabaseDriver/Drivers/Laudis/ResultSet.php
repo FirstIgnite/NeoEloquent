@@ -73,7 +73,16 @@ class ResultSet implements ResultSetInterface
     protected function parseItem($row): array
     {
         if ($row instanceof CypherMap) {
-            $row = $row->values()[0];
+
+            // bugfix to allow use of APOC map function
+            if (count($row) > 1 && !($row->first()->getValue() instanceof LaudisNode)) {
+                $row = $row->toArray();
+            } else {
+                $row = $row->values()[0];
+            }
+            
+            // \Log::debug($row->jsonSerialize());
+            // $row = $row->values()[0];
         }
 
         if ($row instanceof LaudisNode) {
