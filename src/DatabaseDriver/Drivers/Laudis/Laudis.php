@@ -66,6 +66,21 @@ class Laudis extends ClientAbstract implements ClientInterface
         );
     }
 
+    // Adds bulk query support
+    public function executeBulkCypherQuery(Array $statements): ResultSet
+    {
+        // CypherQuery $cypherQuery
+        $preparedStatements = [];
+		foreach ($statements as $statement) {
+            $cypherQuery = new CypherQuery($this, $statement, []);
+			$data[] = new Statement($cypherQuery->getQuery(), $cypherQuery->getParameters());
+		}
+
+        return new ResultSet(
+            $this->client->runStatements($preparedStatements)
+        );
+    }
+
     public function run($cypher)
     {
         return $this->client->run($cypher);
