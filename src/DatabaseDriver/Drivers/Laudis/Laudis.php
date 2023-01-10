@@ -74,7 +74,7 @@ class Laudis extends ClientAbstract implements ClientInterface
 		foreach ($statements as $statement) {
             // \Log::debug('Executing statement: '.$statement);
             $cypherQuery = new CypherQuery($this, $statement, []);
-			$data[] = new Statement($cypherQuery->getQuery(), $cypherQuery->getParameters());
+			$preparedStatements[] = new Statement($cypherQuery->getQuery(), $cypherQuery->getParameters());
 		}
 
         // return new ResultSet(
