@@ -42,9 +42,9 @@ class ResultSet implements ResultSetInterface
         return [
             'labels'     => $node->getLabels()->toArray(),
             'properties' => array_merge(
-                ['id' => $node->getId()],
                 $properties,
-            ),
+                ['id' => $node->getId()],
+            ), // make id come second, so the native Neo4j id overwrites the one in the properties
         ];
     }
 
