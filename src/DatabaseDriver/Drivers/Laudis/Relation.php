@@ -138,7 +138,9 @@ class Relation implements RelationInterface
         }
 
         // 2. Update properties.
-        $propertiesNotNull = array_filter($this->properties);
+        $propertiesNotNull = array_filter($this->properties, function ($value) {
+            return !is_null($value);
+        });
         if (!empty($propertiesNotNull)) {
             $cypher = $this->compileUpdateProperties($propertiesNotNull);
             $this->runStatement($cypher, $propertiesNotNull);
