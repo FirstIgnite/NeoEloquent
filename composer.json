@@ -27,12 +27,12 @@
     ],
     "require": {
         "php": ">=7.3",
-        "illuminate/support": ">=8",
-        "illuminate/database": ">=8",
-        "illuminate/pagination": ">=8",
-        "illuminate/events": ">=8",
-        "illuminate/console": ">=8",
-        "nesbot/carbon": "^2.5",
+        "illuminate/support": "^9.0|^10.0",
+        "illuminate/database": "^9.0|^10.0",
+        "illuminate/pagination": "^9.0|^10.0",
+        "illuminate/events": "^9.0|^10.0",
+        "illuminate/console": "^9.0|^10.0",
+        "nesbot/carbon": "^2.66",
         "laudis/neo4j-php-client": "^2.4",
         "ext-json": "*"
     },
@@ -61,6 +61,11 @@
             "providers": [
                 "Vinelab\\NeoEloquent\\NeoEloquentServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
         }
     }
 }

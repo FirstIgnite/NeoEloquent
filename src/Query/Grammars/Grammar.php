@@ -28,7 +28,6 @@ class Grammar extends IlluminateGrammar
      */
     public function parameter($value)
     {
-
         // Validate whether the requested field is the
         // node id, in that case id(n) doesn't work as
         // a placeholder so we transform it to the id replacement instead.
@@ -48,7 +47,6 @@ class Grammar extends IlluminateGrammar
         if (strpos($property, '.') !== false) {
             $property = explode('.', $property)[1];
         }
-        // change to $ instead of {} for neo4j 4.0
         return '$'.$property;
     }
 

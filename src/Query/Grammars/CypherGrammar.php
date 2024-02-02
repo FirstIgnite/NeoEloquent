@@ -219,15 +219,15 @@ class CypherGrammar extends Grammar
             case 'out':
             default:
                 $relation = '(%s)-[%s]->%s';
-            break;
+                break;
 
             case 'in':
                 $relation = '(%s)<-[%s]-%s';
-            break;
+                break;
 
             case 'in-out':
                 $relation = '(%s)<-[%s]->%s';
-            break;
+                break;
         }
 
         return ($bare) ? sprintf($relation, $parentNode, $relationLabel, $relatedNode)
@@ -284,9 +284,21 @@ class CypherGrammar extends Grammar
         }
 
         $values = $this->parameterize($where['values']);
-        $values = str_replace(['{', '}'], "'", $values);
+        $values = str_replace(['$'], "", $values);
+        $values = $this->addCharactersToString($values, "'", "'");
 
         return 'not '.$this->wrap($where['column']).' in ['.$values.']';
+    }
+
+    protected function addCharactersToString(string $inputString, string $startCharacter, string $endCharacter) 
+    {
+        $values = explode(',', $inputString);
+    
+        foreach ($values as &$value) {
+            $value = $startCharacter . trim($value) . $endCharacter;
+        }
+    
+        return implode(',', $values);
     }
 
     /**
