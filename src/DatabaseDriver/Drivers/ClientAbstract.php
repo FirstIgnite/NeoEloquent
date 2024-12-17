@@ -29,6 +29,11 @@ abstract class ClientAbstract
             $uri .= ':'.$port;
         }
 
+        $database = $this->getDatabase($config);
+        if ($database && $database != 'neo4j') {
+            $uri .= '?database='.$database;
+        }
+
         return $uri;
     }
 
@@ -97,5 +102,10 @@ abstract class ClientAbstract
     public function getScheme()
     {
         return Arr::get($this->config, 'scheme');
+    }
+
+    public function getDatabase()
+    {
+        return Arr::get($this->config, 'database');
     }
 }

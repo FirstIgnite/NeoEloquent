@@ -42,6 +42,7 @@ class Connection extends IlluminateConnection
         'scheme'            => 'http',
         'host'              => 'localhost',
         'port'              => 7474,
+        'database'          => 'neo4j',
         'username'          => null,
         'password'          => null,
         'ssl'               => false,
@@ -138,6 +139,16 @@ class Connection extends IlluminateConnection
     public function getPort()
     {
         return $this->getConfig('port');
+    }
+
+    /**
+     * Get the connection database.
+     *
+     * @return int|string
+     */
+    public function getDatabase(array $config)
+    {
+        return Arr::get($config, 'database', $this->defaults['database']);
     }
 
     /**
