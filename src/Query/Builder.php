@@ -132,6 +132,36 @@ class Builder extends IlluminateQueryBuilder
      */
     public function insertGetId(array $values, $sequence = null)
     {
+        // If we're in a transaction, we must use Cypher queries instead of direct node manipulation
+        // to ensure the operations are part of the transaction
+        if ($this->connection->transactionLevel() > 0) {
+            $cypher = $this->grammar->compileInsertGetId($this, $values, $sequence);
+            $bindings = $this->prepareBindingsForInsert($values);
+
+            // Use select() and get the result set
+            $resultSet = $this->connection->select($cypher, $bindings);
+
+            // Convert ResultSet to array
+            $results = $resultSet->getResults();
+
+            // Get the first result
+            if ($results && isset($results[0])) {
+                $row = $results[0];
+
+                // Try different result structures
+                if (is_array($row) && isset($row['id'])) {
+                    return $row['id'];
+                }
+
+                if (is_object($row) && isset($row->id)) {
+                    return $row->id;
+                }
+            }
+
+            return null;
+        }
+
+        // Original non-transactional logic
         // create a neo4j Node
         $node = $this->client->makeNode();
 
@@ -153,6 +183,23 @@ class Builder extends IlluminateQueryBuilder
         $node->addLabels(array_map([$this, 'makeLabel'], $from));
 
         return $id;
+    }
+
+    /**
+     * Prepare bindings for insert operation
+     *
+     * @param array $values
+     * @return array
+     */
+    protected function prepareBindingsForInsert(array $values)
+    {
+        $bindings = [];
+
+        foreach ($values as $key => $value) {
+            $bindings[$key] = $this->formatValue($value);
+        }
+
+        return $bindings;
     }
 
     /**

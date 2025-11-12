@@ -286,6 +286,11 @@ class Connection extends IlluminateConnection
      */
     public function getCypherQuery($query, array $bindings)
     {
+        // If we're in a transaction, use the transaction to execute the query
+        if ($this->transaction !== null) {
+            return new CypherQuery($this->transaction, $query, $this->prepareBindings($bindings));
+        }
+
         return new CypherQuery($this->getClient(), $query, $this->prepareBindings($bindings));
     }
 
@@ -424,10 +429,13 @@ class Connection extends IlluminateConnection
     public function commit()
     {
         if ($this->transactions == 1) {
-            $this->transaction->commit();
+            if ($this->transaction) {
+                $this->transaction->commit();
+                $this->transaction = null;
+            }
         }
 
-        $this->transactions--;
+        $this->transactions = max(0, $this->transactions - 1);
 
         $this->fireConnectionEvent('committed');
     }
@@ -442,9 +450,12 @@ class Connection extends IlluminateConnection
         if ($this->transactions == 1) {
             $this->transactions = 0;
 
-            $this->transaction->rollBack();
+            if ($this->transaction) {
+                $this->transaction->rollBack();
+                $this->transaction = null;
+            }
         } else {
-            $this->transactions--;
+            $this->transactions = max(0, $this->transactions - 1);
         }
 
         $this->fireConnectionEvent('rollingBack');
@@ -569,5 +580,108 @@ class Connection extends IlluminateConnection
         $result = $statement->getResultSet();
 
         return $result[0][0];
+    }
+
+    /**
+     * Execute a Closure within a transaction.
+     * Override Laravel's default implementation to work with Neo4j.
+     *
+     * @param  \Closure  $callback
+     * @param  int  $attempts
+     * @return mixed
+     *
+     * @throws \Throwable
+     */
+    public function transaction(Closure $callback, $attempts = 1)
+    {
+        for ($currentAttempt = 1; $currentAttempt <= $attempts; $currentAttempt++) {
+            $this->beginTransaction();
+
+            try {
+                $callbackResult = $callback($this);
+            } catch (\Throwable $e) {
+                $this->handleTransactionException(
+                    $e, $currentAttempt, $attempts
+                );
+
+                continue;
+            }
+
+            try {
+                if ($this->transactions == 1) {
+                    $this->commit();
+                }
+
+                $this->transactions = max(0, $this->transactions - 1);
+            } catch (\Throwable $e) {
+                $this->handleCommitTransactionException(
+                    $e, $currentAttempt, $attempts
+                );
+
+                continue;
+            }
+
+            $this->fireConnectionEvent('committed');
+
+            return $callbackResult;
+        }
+    }
+
+    /**
+     * Handle an exception encountered when running a transacted statement.
+     * Override to work with Neo4j.
+     *
+     * @param  \Throwable  $e
+     * @param  int  $currentAttempt
+     * @param  int  $maxAttempts
+     * @return void
+     *
+     * @throws \Throwable
+     */
+    protected function handleTransactionException(\Throwable $e, $currentAttempt, $maxAttempts)
+    {
+        // If there was an exception we will rollback this transaction and then we
+        // can check if we have exceeded the maximum attempt count for this and
+        // if we haven't we will return and try this query again in our loop.
+        $this->rollBack();
+
+        if ($currentAttempt < $maxAttempts) {
+            return;
+        }
+
+        throw $e;
+    }
+
+    /**
+     * Handle an exception encountered when committing a transaction.
+     *
+     * @param  \Throwable  $e
+     * @param  int  $currentAttempt
+     * @param  int  $maxAttempts
+     * @return void
+     *
+     * @throws \Throwable
+     */
+    protected function handleCommitTransactionException(\Throwable $e, $currentAttempt, $maxAttempts)
+    {
+        $this->transactions = max(0, $this->transactions - 1);
+
+        if ($currentAttempt < $maxAttempts) {
+            return;
+        }
+
+        throw $e;
+    }
+
+    /**
+     * Get the PDO connection (not applicable for Neo4j).
+     * This method is required by Laravel's transaction system but Neo4j doesn't use PDO.
+     *
+     * @return null
+     */
+    public function getPdo()
+    {
+        // Neo4j doesn't use PDO, return null
+        return null;
     }
 }
