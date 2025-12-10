@@ -102,11 +102,19 @@ class Connection extends IlluminateConnection
 
     /**
      * Get the currenty active database client.
+     * Returns the transaction when one is active to ensure
+     * all operations run within the transaction context.
      *
      * @return ClientInterface
      */
     public function getClient()
     {
+        // Return transaction when one is active so relationship
+        // operations use the transaction context
+        if ($this->transaction !== null) {
+            return $this->transaction;
+        }
+
         return $this->neo;
     }
 

@@ -90,15 +90,14 @@ class Transaction implements TransactionInterface, ClientInterface
 
     /**
      * Make a node instance.
+     * Creates the node with the underlying transaction so all
+     * operations run within the transaction context.
      *
      * @return Node
      */
     public function makeNode()
     {
-        if ($this->client) {
-            return $this->client->makeNode();
-        }
-        throw new \RuntimeException('Client not available in transaction context');
+        return new Node($this->transaction);
     }
 
     /**
@@ -114,44 +113,42 @@ class Transaction implements TransactionInterface, ClientInterface
 
     /**
      * Make a relationship instance.
+     * Creates the relationship with the underlying transaction so all
+     * operations run within the transaction context.
      *
      * @return Relation
      */
     public function makeRelationship()
     {
-        if ($this->client) {
-            return $this->client->makeRelationship();
-        }
-        throw new \RuntimeException('Client not available in transaction context');
+        return new Relation($this->transaction);
     }
 
     /**
      * Get a node by ID.
+     * Creates and populates the node using the transaction context.
      *
      * @param int $id
      * @return Node
      */
     public function getNode($id)
     {
-        if ($this->client) {
-            return $this->client->getNode($id);
-        }
-        throw new \RuntimeException('Client not available in transaction context');
+        $node = $this->makeNode();
+        $node->setId($id);
+        $node->populateNode();
+
+        return $node;
     }
 
     /**
      * Delete a node.
+     * Uses the node's delete method which will use the transaction context.
      *
      * @param NodeInterface $node
      * @return void
      */
     public function deleteNode(NodeInterface $node)
     {
-        if ($this->client) {
-            $this->client->deleteNode($node);
-        } else {
-            throw new \RuntimeException('Client not available in transaction context');
-        }
+        $node->delete();
     }
 
     /**
@@ -172,5 +169,46 @@ class Transaction implements TransactionInterface, ClientInterface
     public function getTransaction()
     {
         return $this->transaction;
+    }
+
+    /**
+     * Execute bulk Cypher queries within this transaction.
+     *
+     * @param array $statements
+     * @return mixed
+     */
+    public function executeBulkCypherQuery(array $statements)
+    {
+        $preparedStatements = [];
+        foreach ($statements as $statement) {
+            $cypherQuery = new CypherQuery($this, $statement, []);
+            $preparedStatements[] = new Statement($cypherQuery->getQuery(), $cypherQuery->getParameters());
+        }
+
+        return $this->transaction->runStatements($preparedStatements);
+    }
+
+    /**
+     * Start a batch operation.
+     * Note: Batch operations within a transaction use the transaction's context.
+     *
+     * @return Batch
+     */
+    public function startBatch()
+    {
+        // TODO - Batch support
+        return new Batch();
+    }
+
+    /**
+     * Commit a batch operation.
+     * Note: Batch operations within a transaction use the transaction's context.
+     *
+     * @return bool
+     */
+    public function commitBatch()
+    {
+        // TODO - Batch support
+        return true;
     }
 }
