@@ -21,6 +21,7 @@ Join the [Official Neo4j Slack Group](https://neo4j.com/blog/public-neo4j-users-
  - [Models](#models)
  - [Relationships](#relationships)
  - [Edges](#edges)
+ - [Transactions](#transactions)
  - [Migration](#migration)
  - [Schema](#schema)
  - [Aggregates](#aggregates)
@@ -100,11 +101,14 @@ Add the connection defaults:
         'driver' => 'neo4j',
         'host'   => env('DB_HOST', '127.0.0.1'),
         'port'   => env('DB_PORT', '7474'),
+        'database' => env('DB_DATABASE', 'neo4j'),
         'username' => env('DB_USERNAME', null),
         'password' => env('DB_PASSWORD', null)
     ]
 ]
 ```
+
+> **Note:** The `database` parameter specifies which Neo4j database to use. This is important for multi-database setups and ensures transactions work correctly.
 
 You may also use both a SQL connection and a Neo4j connection simultaneously by specifying variables for both.
 
@@ -796,6 +800,189 @@ out the related side of the edge based on the relation function name, in this ca
 ```php
 $location = Location::find(1892);
 $edge = $location->user()->edge($location->user);
+```
+
+## Transactions
+
+NeoEloquent fully supports Neo4j transactions, allowing you to group multiple database operations into a single atomic unit. If any operation fails, all changes can be rolled back, ensuring data consistency.
+
+### Basic Transaction Usage
+
+#### Manual Transactions
+
+You can manually begin, commit, and rollback transactions:
+
+```php
+use Illuminate\Support\Facades\DB;
+
+// Begin a transaction
+DB::connection('neo4j')->beginTransaction();
+
+try {
+    $user = User::create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com'
+    ]);
+
+    $post = Post::create([
+        'title' => 'My First Post',
+        'body' => 'This is the content'
+    ]);
+
+    $user->posts()->save($post);
+
+    // Commit the transaction
+    DB::connection('neo4j')->commit();
+} catch (\Exception $e) {
+    // Rollback on error
+    DB::connection('neo4j')->rollBack();
+    throw $e;
+}
+```
+
+#### Using Transaction Closures
+
+The recommended approach is to use the `transaction` method with a closure. This automatically handles commit and rollback:
+
+```php
+DB::connection('neo4j')->transaction(function () {
+    $user = User::create([
+        'name' => 'Jane Doe',
+        'email' => 'jane@example.com'
+    ]);
+
+    $post = Post::create([
+        'title' => 'Transactional Post',
+        'body' => 'Created within a transaction'
+    ]);
+
+    $user->posts()->save($post);
+
+    // If an exception is thrown here, everything will be rolled back
+    // If successful, everything will be committed automatically
+});
+```
+
+### Transaction Features
+
+#### Nested Transactions
+
+NeoEloquent supports nested transactions. The outer transaction controls the final commit/rollback:
+
+```php
+DB::connection('neo4j')->beginTransaction(); // Level 1
+
+$user = User::create(['name' => 'User 1']);
+
+DB::connection('neo4j')->beginTransaction(); // Level 2
+
+$post = Post::create(['title' => 'Post 1']);
+
+DB::connection('neo4j')->commit(); // Commits level 2
+
+DB::connection('neo4j')->commit(); // Commits level 1 and persists all changes
+```
+
+#### Automatic Rollback on Exceptions
+
+When using the `transaction` closure method, any exception will automatically trigger a rollback:
+
+```php
+try {
+    DB::connection('neo4j')->transaction(function () {
+        User::create(['name' => 'Test User']);
+
+        // This will cause a rollback
+        throw new \Exception('Something went wrong');
+
+        // This won't be reached
+        Post::create(['title' => 'Test Post']);
+    });
+} catch (\Exception $e) {
+    // User creation was rolled back
+    echo "Transaction failed: " . $e->getMessage();
+}
+```
+
+#### Transaction Retry
+
+The `transaction` method supports automatic retry attempts:
+
+```php
+// Will retry up to 3 times on transient errors
+DB::connection('neo4j')->transaction(function () {
+    User::create(['name' => 'Retry User']);
+}, 3);
+```
+
+### Database Configuration for Transactions
+
+To ensure transactions work correctly across your application, make sure your Neo4j connection is properly configured in `config/database.php`:
+
+```php
+'connections' => [
+    'neo4j' => [
+        'driver' => 'neo4j',
+        'host'   => env('NEO4J_HOST', 'localhost'),
+        'port'   => env('NEO4J_PORT', 7687),
+        'database' => env('NEO4J_DATABASE', 'neo4j'),
+        'username' => env('NEO4J_USERNAME', 'neo4j'),
+        'password' => env('NEO4J_PASSWORD', 'secret'),
+    ]
+]
+```
+
+The `database` parameter is important for ensuring all operations (including transactions) target the correct Neo4j database.
+
+### Important Notes
+
+- Transactions are fully ACID compliant in Neo4j
+- All queries within a transaction execute on the same database connection
+- Transactions are automatically isolated from other concurrent operations
+- Long-running transactions may impact database performance - keep them as short as possible
+- Read operations within a transaction see a consistent snapshot of the data
+
+### Example: Complex Transaction
+
+Here's a complete example showing a complex transaction with multiple models and relationships:
+
+```php
+use Illuminate\Support\Facades\DB;
+
+DB::connection('neo4j')->transaction(function () {
+    // Create user
+    $user = User::create([
+        'name' => 'Alice Smith',
+        'email' => 'alice@example.com'
+    ]);
+
+    // Create multiple posts
+    $posts = [];
+    for ($i = 1; $i <= 3; $i++) {
+        $post = Post::create([
+            'title' => "Post {$i}",
+            'body' => "Content for post {$i}"
+        ]);
+
+        // Create relationship
+        $user->posts()->save($post);
+
+        $posts[] = $post;
+    }
+
+    // Create comments on posts
+    foreach ($posts as $post) {
+        $comment = Comment::create([
+            'content' => 'Great post!'
+        ]);
+
+        $user->comments()->save($comment);
+        $post->comments()->save($comment);
+    }
+
+    // All nodes and relationships are created atomically
+    // If anything fails, everything is rolled back
+});
 ```
 
 ## Only in Neo

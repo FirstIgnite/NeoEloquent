@@ -599,6 +599,32 @@ class CypherGrammar extends Grammar
     }
 
     /**
+     * Compile an insert statement and return the ID into a Cypher query.
+     *
+     * @param  \Vinelab\NeoEloquent\Query\Builder  $query
+     * @param  mixed  $values
+     * @param  string  $sequence
+     * @return string
+     */
+    public function compileInsertGetId(Builder $query, $values, $sequence)
+    {
+        if (!is_array($query->from)) {
+            $query->from = [$query->from];
+        }
+
+        $label = $this->prepareLabels($query->from);
+
+        // Prepare the entity
+        $entity = ['label' => $label, 'bindings' => $values];
+
+        // Create the node and return its id
+        // Use an identifier 'n' and return id(n)
+        $node = $this->prepareEntity($entity, 'n');
+
+        return 'CREATE ' . $node . ' RETURN id(n) AS id';
+    }
+
+    /**
      * Compile a query that creates multiple nodes of multiple model types related all together.
      *
      * @param \Vinelab\NeoEloquent\Query\Builder $query
