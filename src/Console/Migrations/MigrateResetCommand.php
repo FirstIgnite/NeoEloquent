@@ -58,13 +58,14 @@ class MigrateResetCommand extends BaseCommand
 
         $this->migrator->setConnection($this->option('database'));
 
+        // Must precede reset(): the Migrator writes progress as it goes, so
+        // attaching the output afterwards printed nothing at all.
+        $this->migrator->setOutput($this->output);
+
         $this->migrator->reset(
             $this->getMigrationPaths(),
             $this->option('pretend')
         );
-
-        //! Set the output implementation that should be used by the console
-        $this->migrator->setOutput($this->output);
     }
 
     /**

@@ -56,6 +56,10 @@ class MigrateRollbackCommand extends BaseCommand
 
         $this->migrator->setConnection($this->option('database'));
 
+        // Must precede rollback(): the Migrator writes progress as it goes, so
+        // attaching the output afterwards printed nothing at all.
+        $this->migrator->setOutput($this->output);
+
         $this->migrator->rollback(
             $this->getMigrationPaths(),
             [
@@ -63,9 +67,6 @@ class MigrateRollbackCommand extends BaseCommand
                 'step'    => (int) $this->option('step'),
             ]
         );
-
-        //! Set the output implementation that should be used by the console
-        $this->migrator->setOutput($this->output);
     }
 
     /**
