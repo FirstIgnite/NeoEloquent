@@ -56,9 +56,8 @@ class MigrateRollbackCommand extends BaseCommand
 
         $this->migrator->setConnection($this->option('database'));
 
-        //! Set the output implementation that should be used by the console.
-        // Must come BEFORE rollback(): the migrator writes progress as it goes,
-        // so attaching the output afterwards left the command silent.
+        // Must precede rollback(): the Migrator writes progress as it goes, so
+        // attaching the output afterwards printed nothing at all.
         $this->migrator->setOutput($this->output);
 
         $this->migrator->rollback(

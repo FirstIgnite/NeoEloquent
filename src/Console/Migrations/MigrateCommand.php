@@ -60,24 +60,8 @@ class MigrateCommand extends BaseCommand
 
         $this->migrator->setConnection($this->option('database'));
 
-        // Give the migrator the output BEFORE it runs. Modern Illuminate
-        // Migrators write progress as each migration is applied, straight to
-        // the OutputInterface they were handed, rather than collecting notes
-        // to be drained afterwards.
-        //
-        // This used to run AFTER ->run() and iterate the return value of
-        // setOutput():
-        //
-        //     foreach ($this->migrator->setOutput($this->output) as $note) {
-        //         $this->output->writeln($note);
-        //     }
-        //
-        // which is broken two ways and fails SILENTLY, so the command exited 0
-        // having printed nothing at all. The output was attached only after
-        // every migration had already run, so the migrator had nowhere to write
-        // during the run; and setOutput() returns the Migrator, so foreach
-        // iterated an object's *public properties*, of which Migrator has none.
-        // No notes, no error, no clue whether it applied ten migrations or zero.
+        // Must precede run(): the Migrator writes progress as it goes, so
+        // attaching the output afterwards printed nothing at all.
         $this->migrator->setOutput($this->output);
 
         // Next, we will check to see if a path option has been defined. If it has
