@@ -60,6 +60,26 @@ class MigrateCommand extends BaseCommand
 
         $this->migrator->setConnection($this->option('database'));
 
+        // Give the migrator the output BEFORE it runs. Modern Illuminate
+        // Migrators write progress as each migration is applied, straight to
+        // the OutputInterface they were handed, rather than collecting notes
+        // to be drained afterwards.
+        //
+        // This used to run AFTER ->run() and iterate the return value of
+        // setOutput():
+        //
+        //     foreach ($this->migrator->setOutput($this->output) as $note) {
+        //         $this->output->writeln($note);
+        //     }
+        //
+        // which is broken two ways and fails SILENTLY, so the command exited 0
+        // having printed nothing at all. The output was attached only after
+        // every migration had already run, so the migrator had nowhere to write
+        // during the run; and setOutput() returns the Migrator, so foreach
+        // iterated an object's *public properties*, of which Migrator has none.
+        // No notes, no error, no clue whether it applied ten migrations or zero.
+        $this->migrator->setOutput($this->output);
+
         // Next, we will check to see if a path option has been defined. If it has
         // we will use the path relative to the root of this installation folder
         // so that migrations may be run for any path within the applications.
@@ -67,12 +87,6 @@ class MigrateCommand extends BaseCommand
             'pretend' => $this->option('pretend'),
             'step'    => $this->option('step'),
         ]);
-        // Once the migrator has run we will grab the note output and send it out to
-        // the console screen, since the migrator itself functions without having
-        // any instances of the OutputInterface contract passed into the class.
-        foreach ($this->migrator->setOutput($this->output) as $note) {
-            $this->output->writeln($note);
-        }
         // Finally, if the "seed" option has been given, we will re-run the database
         // seed task to re-populate the database, which is convenient when adding
         // a migration and a seed at the same time, as it is only this command.
