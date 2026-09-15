@@ -113,7 +113,12 @@ you can do so by passing additional arguments to default migration command like:
     {
         $cypher = $this->conn->getSchemaGrammar()->compileLabelExists($label);
 
-        return $this->getConnection()->select($cypher, [])->count() > 0;
+        // count() on the ResultSet itself throws "Call to undefined method
+        // ...Laudis\ResultSet::count()". The driver's ResultSet is not
+        // Countable, it exposes getResults() (see ResultSetInterface).
+        // This made neo4j:migrate:status unusable, since its first act is
+        // repositoryExists() -> hasLabel().
+        return count($this->getConnection()->select($cypher, [])->getResults()) > 0;
     }
 
     /**
@@ -127,6 +132,12 @@ you can do so by passing additional arguments to default migration command like:
     {
         $cypher = $this->conn->getSchemaGrammar()->compileRelationExists($relation);
 
+        // NOTE: this carries the same ResultSet::count() bug fixed in
+        // hasLabel() above, and will throw if it is ever called. Left alone
+        // deliberately: it currently has no callers anywhere in the package or
+        // in the consuming app, so changing it would be untested surface area
+        // in a shared dependency for no present benefit. Fix it alongside
+        // whatever first needs it.
         return $this->getConnection()->select($cypher, [])->count() > 0;
     }
 
